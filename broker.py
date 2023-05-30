@@ -2,7 +2,24 @@
 import time
 import Adafruit_DHT
 import paho.mqtt.client as mqtt
+import mariadb
+import sys
 
+# Connect to MariaDB Database
+try:
+    conn = mariadb.connect(
+        user="root",
+        password="",
+        host="localhost",
+        port=3306,
+        database="humiture"
+    )
+except mariadb.Error as e:
+    print(f"Error connecting to MariaDB Platform: {e}")
+    sys.exit(1)
+
+# Get Cursor
+cur = conn.cursor()
 
 # DHT11 data pin (GPIO)
 DHT_DATA_PIN = 4
@@ -24,6 +41,16 @@ while True:
     client.publish("greenhouse-1/floor-1/humiture-1/temperature", temperature)
     client.publish("greenhouse-1/floor-1/humiture-1/humidity", humidity)
 
+    # Save to database
+    try:
+        cur.execute("INSERT INTO data (time,temperature,humidity) VALUES (?, ?, ?)",
+                    ("2023-05-30 13:23:00", temperature, humidity))
+        conn.commit()
+    except mariadb.Error as e:
+        print(f"Error: {e}")
+
     print(f"Temp: {temperature}°C  Humidity: {humidity}%")
 
     time.sleep(6)
+
+conn.close()
