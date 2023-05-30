@@ -4,7 +4,7 @@ import Adafruit_DHT
 import paho.mqtt.client as mqtt
 
 
-# DHT11 data pin
+# DHT11 data pin (GPIO)
 DHT_DATA_PIN = 4
 
 # Setup DHT11 sensor
