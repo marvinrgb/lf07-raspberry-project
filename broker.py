@@ -31,7 +31,10 @@ dht11_sensor = Adafruit_DHT.DHT11
 # Setup MQTT Client
 client = mqtt.Client()
 client.username_pw_set("mqtt_user", "raspberry")
-client.connect("10.7.154.204", 1883)
+try:
+    client.connect("10.7.154.204", 1883)
+except OSError as e:
+    print("Couldn't connect to BOSS PI!", e)
 
 # Read sensor data and publish
 while True:
