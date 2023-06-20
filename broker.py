@@ -5,7 +5,18 @@ import paho.mqtt.client as mqtt
 import mariadb
 import sys
 from datetime import datetime, timezone
+import RPi.GPIO as GPIO
 
+
+# Setup Board and GPIOs
+FAN_PIN = 12        # Transistor base connected on that pin
+DHT_DATA_PIN = 4    # DHT11 sensor data pin
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(FAN_PIN, GPIO.OUT)
+GPIO.output(FAN_PIN, GPIO.LOW)
+
+# Setup DHT11 sensor
+dht11_sensor = Adafruit_DHT.DHT11
 
 # Connect to MariaDB Database
 try:
@@ -18,15 +29,11 @@ try:
     )
 except mariadb.Error as e:
     print(f"Error connecting to MariaDB Platform: {e}")
+    GPIO.cleanup()
     sys.exit(1)
 
-# Get Cursor
+# Get Cursor to database
 cur = conn.cursor()
-
-# DHT11 data pin (GPIO)
-DHT_DATA_PIN = 4
-# Setup DHT11 sensor
-dht11_sensor = Adafruit_DHT.DHT11
 
 # Setup MQTT Client
 client = mqtt.Client()
@@ -55,6 +62,12 @@ while True:
 
     print(f"Temp: {temperature}°C  Humidity: {humidity}%")
 
-    time.sleep(6)
+    if (temperature > 25) or (humidity > 80):
+        GPIO.output(FAN_PIN, GPIO.HIGH)
+    else:
+        GPIO.output(FAN_PIN, GPIO.LOW)
+
+    time.sleep(5)
 
 conn.close()
+GPIO.cleanup()
